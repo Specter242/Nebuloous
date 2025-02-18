@@ -28,10 +28,15 @@ FLEETS_DIR = os.path.join(NEBULOUS_DIR, "Saves/Fleets")
 class ReportHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.src_path.endswith(".xml"):
+            time.sleep(1)  # Delay to allow the report to fully populate
             process_skirmish_report(event.src_path)
 
 def process_skirmish_report(report_path):
     try:
+        if os.path.getsize(report_path) == 0:
+            print(f"Error: XML file {report_path} is empty.")
+            return
+        
         tree = ET.parse(report_path)
         root = tree.getroot()
     except ET.ParseError as e:
@@ -85,6 +90,13 @@ def save_fleet_file(ships):
         ship_elem = ET.SubElement(ships_element, "Ship")
         ET.SubElement(ship_elem, "Name").text = ship["name"]
         ET.SubElement(ship_elem, "HullType").text = ship["hull"]
+        ET.SubElement(ship_elem, "Condition").text = ship["condition"]
+        
+        # Add additional details
+        ET.SubElement(ship_elem, "Key").text = "some-unique-key"  # Generate or retrieve a unique key
+        ET.SubElement(ship_elem, "Cost").text = "0"  # Calculate or retrieve the cost
+        ET.SubElement(ship_elem, "Number").text = "0"  # Assign a number
+        ET.SubElement(ship_elem, "SymbolOption").text = "0"  # Assign a symbol option
         
         socket_map = ET.SubElement(ship_elem, "SocketMap")
         for ammo in ship["ammo"]:
@@ -92,6 +104,11 @@ def save_fleet_file(ships):
             ET.SubElement(hull_socket, "ComponentName").text = ammo["weapon"]
             component_data = ET.SubElement(hull_socket, "ComponentData")
             ET.SubElement(component_data, "Quantity").text = ammo["remaining"]
+        
+        # Add empty elements for WeaponGroups, TemplateMissileTypes, and TemplateSpacecraftTypes
+        ET.SubElement(ship_elem, "WeaponGroups")
+        ET.SubElement(ship_elem, "TemplateMissileTypes")
+        ET.SubElement(ship_elem, "TemplateSpacecraftTypes")
     
     tree = ET.ElementTree(fleet_root)
     try:
