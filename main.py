@@ -1,6 +1,8 @@
 import os
 import time
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
+import uuid
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -79,22 +81,30 @@ def save_fleet_file(ships):
     fleet_name = f"Recovered_Fleet_{int(time.time())}"
     fleet_path = os.path.join(FLEETS_DIR, f"{fleet_name}.fleet")
     
-    fleet_root = ET.Element("Fleet")
+    fleet_root = ET.Element("Fleet", xmlns_xsd="http://www.w3.org/2001/XMLSchema", xmlns_xsi="http://www.w3.org/2001/XMLSchema-instance")
     ET.SubElement(fleet_root, "Name").text = fleet_name
     ET.SubElement(fleet_root, "Version").text = "3"
+    
+    total_points = sum(int(ship.get("cost", 0)) for ship in ships)
+    ET.SubElement(fleet_root, "TotalPoints").text = str(total_points)
+    
     ET.SubElement(fleet_root, "FactionKey").text = "Stock/Alliance"
+    sort_override_order_elem = ET.SubElement(fleet_root, "SortOverrideOrder")
+    sort_override_order_elem.set("{http://www.w3.org/2001/XMLSchema-instance}nil", "true")  # Set xsi:nil="true"
     
     ships_element = ET.SubElement(fleet_root, "Ships")
     
     for ship in ships:
         ship_elem = ET.SubElement(ships_element, "Ship")
+        save_id_elem = ET.SubElement(ship_elem, "SaveID")
+        save_id_elem.set("{http://www.w3.org/2001/XMLSchema-instance}nil", "true")  # Set xsi:nil="true"
+        ET.SubElement(ship_elem, "Key").text = str(uuid.uuid4())  # Generate a unique key for each ship
         ET.SubElement(ship_elem, "Name").text = ship["name"]
         ET.SubElement(ship_elem, "HullType").text = ship["hull"]
         ET.SubElement(ship_elem, "Condition").text = ship["condition"]
         
         # Add additional details
-        ET.SubElement(ship_elem, "Key").text = "some-unique-key"  # Generate or retrieve a unique key
-        ET.SubElement(ship_elem, "Cost").text = "0"  # Calculate or retrieve the cost
+        ET.SubElement(ship_elem, "Cost").text = ship.get("cost", "0")  # Calculate or retrieve the cost
         ET.SubElement(ship_elem, "Number").text = "0"  # Assign a number
         ET.SubElement(ship_elem, "SymbolOption").text = "0"  # Assign a symbol option
         
@@ -110,9 +120,16 @@ def save_fleet_file(ships):
         ET.SubElement(ship_elem, "TemplateMissileTypes")
         ET.SubElement(ship_elem, "TemplateSpacecraftTypes")
     
-    tree = ET.ElementTree(fleet_root)
+    # Convert the ElementTree to a string
+    rough_string = ET.tostring(fleet_root, 'utf-8')
+    
+    # Use minidom to pretty-print the XML
+    reparsed = xml.dom.minidom.parseString(rough_string)
+    pretty_xml_as_string = reparsed.toprettyxml(indent="  ")
+    
     try:
-        tree.write(fleet_path)
+        with open(fleet_path, 'w') as f:
+            f.write(pretty_xml_as_string)
         print(f"Saved fleet: {fleet_path}")
     except IOError as e:
         print(f"Error saving fleet file {fleet_path}: {e}")
