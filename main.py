@@ -57,10 +57,16 @@ def process_skirmish_report(report_path):
             
             for ship in ships:
                 if ship.find("Eliminated").text == "NotEliminated":
+                    full_name = ship.find("ShipName").text
+                    name = full_name.split(' ', 1)[1] if ' ' in full_name else full_name  # Exclude prefix
+                    hull_string = ship.find("HullString").text
+                    number = ''.join(filter(str.isdigit, hull_string)) if hull_string else "0"
                     ship_data = {
-                        "name": ship.find("ShipName").text,
+                        "name": name,
                         "hull": ship.find("HullKey").text,
                         "condition": ship.find("Condition").text,
+                        "cost": ship.find("OriginalPointCost").text if ship.find("OriginalPointCost") is not None else "0",
+                        "number": number,
                         "ammo": [
                             {
                                 "weapon": w.find("Name").text,
@@ -100,13 +106,11 @@ def save_fleet_file(ships):
         save_id_elem.set("{http://www.w3.org/2001/XMLSchema-instance}nil", "true")  # Set xsi:nil="true"
         ET.SubElement(ship_elem, "Key").text = str(uuid.uuid4())  # Generate a unique key for each ship
         ET.SubElement(ship_elem, "Name").text = ship["name"]
+        ET.SubElement(ship_elem, "Cost").text = ship.get("cost", "0")  # Calculate or retrieve the cost
+        ET.SubElement(ship_elem, "Number").text = ship["number"]  # Assign the number from HullString
+        ET.SubElement(ship_elem, "SymbolOption").text = "0"  # Assign a symbol option
         ET.SubElement(ship_elem, "HullType").text = ship["hull"]
         ET.SubElement(ship_elem, "Condition").text = ship["condition"]
-        
-        # Add additional details
-        ET.SubElement(ship_elem, "Cost").text = ship.get("cost", "0")  # Calculate or retrieve the cost
-        ET.SubElement(ship_elem, "Number").text = "0"  # Assign a number
-        ET.SubElement(ship_elem, "SymbolOption").text = "0"  # Assign a symbol option
         
         socket_map = ET.SubElement(ship_elem, "SocketMap")
         for ammo in ship["ammo"]:
