@@ -1,9 +1,14 @@
 import os
 import time
 import shutil
-import xml.etree.ElementTree as ET
+import logging
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+import xml.etree.ElementTree as ET
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def find_nebulous_folder():
     possible_paths = [
@@ -27,29 +32,29 @@ IN_THEATER_DIR = os.path.join(FLEETS_DIR, "In Theater")
 if not os.path.exists(IN_THEATER_DIR):
     os.makedirs(IN_THEATER_DIR)
 
-print(f"Monitoring directory: {REPORTS_DIR}")
+logging.info(f"Monitoring directory: {REPORTS_DIR}")
 
 class ReportHandler(FileSystemEventHandler):
     def on_created(self, event):
-        print(f"File created: {event.src_path}")  # Log file creation
+        logging.info(f"File created: {event.src_path}")  # Log file creation
         if event.src_path.endswith(".xml"):
             time.sleep(1)  # Delay to allow the report to fully populate
             process_skirmish_report(event.src_path)
 
 def process_skirmish_report(report_path):
-    print(f"Processing report: {report_path}")
+    logging.info(f"Processing report: {report_path}")
     try:
         tree = ET.parse(report_path)
     except PermissionError:
-        print(f"Permission denied: {report_path}")
+        logging.error(f"Permission denied: {report_path}")
         return
     except Exception as e:
-        print(f"Failed to process report {report_path}: {e}")
+        logging.error(f"Failed to process report {report_path}: {e}")
         return
 
     root = tree.getroot()
     local_team = root.find("LocalPlayerTeam").text
-    print(f"Local team: {local_team}")
+    logging.info(f"Local team: {local_team}")
 
     fleet_prefix = ""
     for team in root.findall("Teams/TeamReportOfShipBattleReportCraftBattleReport"):
@@ -59,43 +64,44 @@ def process_skirmish_report(report_path):
                 fleet_prefix = player.find("Colors/FleetPrefix").text if player.find("Colors/FleetPrefix") is not None else ""
                 break
 
-    print(f"Fleet prefix: {fleet_prefix}")
+    logging.info(f"Fleet prefix: {fleet_prefix}")
 
+    active_ships = []
     for team in root.findall("Teams/TeamReportOfShipBattleReportCraftBattleReport"):
         if team.find("TeamID").text == local_team:
             player = team.find("Players/AARPlayerReportOfShipBattleReportCraftBattleReport")
             ships = player.findall("Ships/ShipBattleReport")
-            active_ships = []
             
             for ship in ships:
                 if ship.find("Eliminated").text == "NotEliminated":
                     ship_name = ship.find("ShipName").text
                     ship_name_without_prefix = ship_name.replace(fleet_prefix, "", 1).strip()
-                    print(f"Original ship name: {ship_name}, Without prefix: {ship_name_without_prefix}")
+                    logging.info(f"Original ship name: {ship_name}, Without prefix: {ship_name_without_prefix}")
                     active_ships.append(ship_name_without_prefix)
             
-            print(f"Active ships: {active_ships}")
+            logging.info(f"Active ships: {active_ships}")
             fleet_path = find_matching_fleet(active_ships)
             if fleet_path:
-                print(f"Matching fleet found: {fleet_path}")
+                logging.info(f"Matching fleet found: {fleet_path}")
                 save_updated_fleet(fleet_path, ships, report_path)
             else:
-                print("No matching fleet found")
+                logging.info("No matching fleet found")
 
 def find_matching_fleet(ship_names):
-    print(f"Finding matching fleet for ships: {ship_names}")
-    for fleet_file in os.listdir(FLEETS_DIR):
+    campaign_fleets_dir = os.path.join(FLEETS_DIR, "Campaign Fleets")
+    logging.info(f"Finding matching fleet for ships: {ship_names} in {campaign_fleets_dir}")
+    for fleet_file in os.listdir(campaign_fleets_dir):
         if fleet_file.endswith(".fleet"):
-            tree = ET.parse(os.path.join(FLEETS_DIR, fleet_file))
+            tree = ET.parse(os.path.join(campaign_fleets_dir, fleet_file))
             root = tree.getroot()
             fleet_ships = [ship.find("Name").text for ship in root.findall("Ships/Ship")]
-            print(f"Fleet ships: {fleet_ships}")
+            logging.info(f"Fleet ships: {fleet_ships}")
             if set(ship_names).issubset(set(fleet_ships)):
-                return os.path.join(FLEETS_DIR, fleet_file)
+                return os.path.join(campaign_fleets_dir, fleet_file)
     return None
 
 def save_updated_fleet(fleet_path, ships, report_path):
-    print(f"Saving updated fleet: {fleet_path}")
+    logging.info(f"Saving updated fleet: {fleet_path}")
     tree = ET.parse(fleet_path)
     root = tree.getroot()
     fleet_name = root.find("Name").text
@@ -125,6 +131,7 @@ def save_updated_fleet(fleet_path, ships, report_path):
                 missile_expended[missile_name] += total_expended
             else:
                 missile_expended[missile_name] = total_expended
+    logging.info(f"Missile expended: {missile_expended}")
     
     ship_elements = root.findall("Ships/Ship")
     for ship_elem in ship_elements:
@@ -134,20 +141,63 @@ def save_updated_fleet(fleet_path, ships, report_path):
             condition = float(report_ship.find("Condition").text)
             if condition <= 0:
                 root.find("Ships").remove(ship_elem)
+                logging.info(f"Removed ship: {ship_name} due to condition <= 0")
             else:
-                ammo_percentage_expended = float(report_ship.find("AmmoPercentageExpended").text)
-                for magazine in ship_elem.findall(".//Magazine"):
-                    for load in magazine.findall("Load"):
-                        quantity_elem = load.find("Quantity")
-                        munition_key_elem = load.find("MunitionKey")
-                        if quantity_elem is not None and munition_key_elem is not None:
-                            original_quantity = int(quantity_elem.text)
-                            munition_key = munition_key_elem.text
-                            if munition_key in missile_expended:
-                                new_quantity = original_quantity - missile_expended[munition_key]
-                                if new_quantity < 0:
-                                    new_quantity = 0
-                                quantity_elem.text = str(new_quantity)
+                ammo_percentage_expended = report_ship.find("AmmoPercentageExpended")
+                ammo_percentage_expended = float(ammo_percentage_expended.text) if ammo_percentage_expended is not None else 0
+                for hull_socket in ship_elem.findall(".//HullSocket"):
+                    for socket in hull_socket.findall("Socket"):
+                        for load in socket.findall("Load"):
+                            quantity_elem = load.find("Quantity")
+                            munition_key_elem = load.find("MunitionKey")
+                            if quantity_elem is not None and munition_key_elem is not None:
+                                original_quantity = int(quantity_elem.text)
+                                munition_key = munition_key_elem.text
+                                if munition_key in missile_expended:
+                                    total_expended = missile_expended[munition_key]
+                                    num_sockets = len([load for load in socket.findall("Load") if load.find("MunitionKey").text == munition_key])
+                                    expended_per_socket = total_expended // num_sockets
+                                    remaining_expended = total_expended % num_sockets
+                                    
+                                    new_quantity = original_quantity - expended_per_socket
+                                    if remaining_expended > 0:
+                                        new_quantity -= 1
+                                        remaining_expended -= 1
+                                    if new_quantity < 0:
+                                        new_quantity = 0
+                                    quantity_elem.text = str(new_quantity)
+                                    logging.info(f"Updated {munition_key} quantity from {original_quantity} to {new_quantity} in ship {ship_name}")
+                                else:
+                                    new_quantity = int(original_quantity * (1 - ammo_percentage_expended))
+                                    quantity_elem.text = str(new_quantity)
+                                    logging.info(f"Adjusted {munition_key} quantity from {original_quantity} to {new_quantity} in ship {ship_name} based on ammo percentage expended")
+    
+    # Generate lists of each missile type and quantity on each ship and each munition type and quantity
+    missile_list = []
+    munition_list = []
+    for ship_elem in ship_elements:
+        ship_name = ship_elem.find("Name").text
+        for hull_socket in ship_elem.findall(".//HullSocket"):
+            for socket in hull_socket.findall("Socket"):
+                for load in socket.findall("Load"):
+                    quantity_elem = load.find("Quantity")
+                    munition_key_elem = load.find("MunitionKey")
+                    if quantity_elem is not None and munition_key_elem is not None:
+                        quantity = int(quantity_elem.text)
+                        munition_key = munition_key_elem.text
+                        if "Missile" in munition_key:
+                            missile_list.append((ship_name, munition_key, quantity))
+                        else:
+                            munition_list.append((ship_name, munition_key, quantity))
+    
+    # Print the lists to the console
+    logging.info("Missile list:")
+    for ship_name, munition_key, quantity in missile_list:
+        logging.info(f"Ship: {ship_name}, Missile: {munition_key}, Quantity: {quantity}")
+    
+    logging.info("Munition list:")
+    for ship_name, munition_key, quantity in munition_list:
+        logging.info(f"Ship: {ship_name}, Munition: {munition_key}, Quantity: {quantity}")
     
     # Write the updated fleet to the new file with the correct XML elements
     tree.write(new_fleet_path, xml_declaration=True, encoding='utf-8', method="xml")
@@ -156,7 +206,7 @@ def save_updated_fleet(fleet_path, ships, report_path):
     with open(new_fleet_path, 'w') as file:
         file.write('<?xml version="1.0"?>\n<Fleet xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n' + content.split('\n', 2)[2])
     
-    print(f"Updated fleet saved: {new_fleet_path}")
+    logging.info(f"Updated fleet saved: {new_fleet_path}")
 
 def get_new_fleet_name(base_name):
     count = 1
@@ -170,7 +220,7 @@ def monitor_reports():
     observer.schedule(event_handler, REPORTS_DIR, recursive=False)
     observer.start()
     
-    print("Monitoring skirmish reports for new files...")
+    logging.info("Monitoring skirmish reports for new files...")
     try:
         while True:
             time.sleep(5)
