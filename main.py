@@ -6,6 +6,8 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 import xml.etree.ElementTree as ET
+from reportparser import parse_report
+from fleetparser import parse_fleet
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -44,7 +46,12 @@ class ReportHandler(FileSystemEventHandler):
 def process_skirmish_report(report_path):
     logging.info(f"Processing report: {report_path}")
     try:
+        report_data = {"ships": parse_report(report_path)}
+        print("Report Information:", report_data)  # Debug print for report data
         tree = ET.parse(report_path)
+        root = tree.getroot()
+        fleet_prefix_elem = root.find(".//Colors/FleetPrefix")
+        fleet_prefix = fleet_prefix_elem.text.strip() if fleet_prefix_elem is not None else ""
     except PermissionError:
         logging.error(f"Permission denied: {report_path}")
         return
@@ -52,40 +59,103 @@ def process_skirmish_report(report_path):
         logging.error(f"Failed to process report {report_path}: {e}")
         return
 
-    root = tree.getroot()
-    local_team = root.find("LocalPlayerTeam").text
-    logging.info(f"Local team: {local_team}")
-
-    fleet_prefix = ""
-    for team in root.findall("Teams/TeamReportOfShipBattleReportCraftBattleReport"):
-        if team.find("TeamID").text == local_team:
-            player = team.find("Players/AARPlayerReportOfShipBattleReportCraftBattleReport")
-            if player.find("IsLocalPlayer").text == "true":
-                fleet_prefix = player.find("Colors/FleetPrefix").text if player.find("Colors/FleetPrefix") is not None else ""
-                break
-
-    logging.info(f"Fleet prefix: {fleet_prefix}")
-
     active_ships = []
-    for team in root.findall("Teams/TeamReportOfShipBattleReportCraftBattleReport"):
-        if team.find("TeamID").text == local_team:
-            player = team.find("Players/AARPlayerReportOfShipBattleReportCraftBattleReport")
-            ships = player.findall("Ships/ShipBattleReport")
-            
-            for ship in ships:
-                if ship.find("Eliminated").text == "NotEliminated":
-                    ship_name = ship.find("ShipName").text
-                    ship_name_without_prefix = ship_name.replace(fleet_prefix, "", 1).strip()
-                    logging.info(f"Original ship name: {ship_name}, Without prefix: {ship_name_without_prefix}")
-                    active_ships.append(ship_name_without_prefix)
-            
-            logging.info(f"Active ships: {active_ships}")
-            fleet_path = find_matching_fleet(active_ships)
-            if fleet_path:
-                logging.info(f"Matching fleet found: {fleet_path}")
-                save_updated_fleet(fleet_path, ships, report_path)
-            else:
-                logging.info("No matching fleet found")
+    for ship in report_data.get("ships", []):
+        name = ship["ship_name"]
+        if fleet_prefix and name.startswith(fleet_prefix):
+            name = name[len(fleet_prefix):].strip()
+        active_ships.append(name)
+    logging.info(f"Active ships (without prefix): {active_ships}")
+
+    campaign_fleet_path = find_matching_fleet(active_ships)
+    if campaign_fleet_path:
+        logging.info(f"Matching campaign fleet found: {campaign_fleet_path}")
+        try:
+            # Generate a unique new fleet name in the In Theater folder by appending "battle X"
+            base_name, ext = os.path.splitext(os.path.basename(campaign_fleet_path))
+            count = 1
+            new_name = f"{base_name} battle {count}{ext}"
+            target_fleet_path = os.path.join(IN_THEATER_DIR, new_name)
+            while os.path.exists(target_fleet_path):
+                count += 1
+                new_name = f"{base_name} battle {count}{ext}"
+                target_fleet_path = os.path.join(IN_THEATER_DIR, new_name)
+            shutil.copy(campaign_fleet_path, target_fleet_path)
+            logging.info(f"Copied fleet to In Theater: {target_fleet_path}")
+            fleet_data = parse_fleet(target_fleet_path)
+            print("Fleet Information:", fleet_data)  # Debug print for fleet data
+            if fleet_data is None:
+                raise ValueError("parse_fleet returned None")
+        except Exception as e:
+            logging.error(f"Failed to copy/parse fleet {campaign_fleet_path}: {e}")
+            return
+        update_fleet_with_report(target_fleet_path, fleet_data, report_data)
+    else:
+        logging.info("No matching fleet found")
+
+def update_fleet_with_report(fleet_path, fleet_data, report_data):
+    logging.info(f"Updating fleet with report: {fleet_path}")
+
+    for ship_report in report_data.get("ships", []):
+        ship_name = ship_report["ship_name"]
+        for fleet_ship in fleet_data:
+            if fleet_ship["Name"] == ship_name:
+                # Update munitions
+                for munition, details in ship_report["munitions"].items():
+                    if munition in fleet_ship["munitions"]:
+                        fleet_ship["munitions"][munition] -= details["shots_fired"]
+                        if fleet_ship["munitions"][munition] < 0:
+                            fleet_ship["munitions"][munition] = 0
+                # Update missiles
+                for missile, details in ship_report["missiles"].items():
+                    if missile in fleet_ship["missiles"]:
+                        fleet_ship["missiles"][missile] -= details["total_expended"]
+                        if fleet_ship["missiles"][missile] < 0:
+                            fleet_ship["missiles"][missile] = 0
+
+    save_updated_fleet(fleet_path, fleet_data)
+
+def save_updated_fleet(fleet_path, fleet_data):
+    logging.info(f"Saving updated fleet: {fleet_path}")
+    tree = ET.parse(fleet_path)
+    root = tree.getroot()
+
+    # Update the fleet's Name element to match the base filename (e.g., "blast battle 1")
+    new_fleet_name = os.path.splitext(os.path.basename(fleet_path))[0]
+    name_elem = root.find("Name")
+    if name_elem is not None:
+        name_elem.text = new_fleet_name
+    else:
+        name_elem = ET.Element("Name")
+        name_elem.text = new_fleet_name
+        root.insert(0, name_elem)
+
+    # ...existing code for updating munitions and missiles...
+    for fleet_ship in fleet_data:
+        for ship in root.findall("Ships/Ship"):
+            if ship.find("Name").text == fleet_ship["Name"]:
+                # Update munitions
+                for hull_socket in ship.find("SocketMap").findall("HullSocket"):
+                    component_data = hull_socket.find("ComponentData")
+                    if (component_data is not None and
+                        component_data.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'BulkMagazineData'):
+                        load = component_data.find("Load")
+                        if load is not None:
+                            for mag_save_data in load.findall("MagSaveData"):
+                                munition_key = mag_save_data.find("MunitionKey").text
+                                if munition_key in fleet_ship["munitions"]:
+                                    mag_save_data.find("Quantity").text = str(fleet_ship["munitions"][munition_key])
+                    # Update missiles
+                    if (component_data is not None and
+                        component_data.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'ResizableCellLauncherData'):
+                        missile_load = component_data.find("MissileLoad")
+                        if missile_load is not None:
+                            for mag_save_data in missile_load.findall("MagSaveData"):
+                                missile_key = mag_save_data.find("MunitionKey").text
+                                if missile_key in fleet_ship["missiles"]:
+                                    mag_save_data.find("Quantity").text = str(fleet_ship["missiles"][missile_key])
+
+    tree.write(fleet_path, xml_declaration=True, encoding='utf-8', method="xml")
 
 def find_matching_fleet(ship_names):
     campaign_fleets_dir = os.path.join(FLEETS_DIR, "Campaign Fleets")
@@ -99,39 +169,6 @@ def find_matching_fleet(ship_names):
             if set(ship_names).issubset(set(fleet_ships)):
                 return os.path.join(campaign_fleets_dir, fleet_file)
     return None
-
-def save_updated_fleet(fleet_path, ships, report_path):
-    logging.info(f"Saving updated fleet: {fleet_path}")
-    tree = ET.parse(fleet_path)
-    root = tree.getroot()
-    fleet_name = root.find("Name").text
-    new_fleet_name = get_new_fleet_name(fleet_name)
-    new_fleet_path = os.path.join(IN_THEATER_DIR, f"{new_fleet_name}.fleet")
-    
-    # Copy the original fleet file to the new location
-    shutil.copy(fleet_path, new_fleet_path)
-    
-    # Load the copied fleet file for modification
-    tree = ET.parse(new_fleet_path)
-    root = tree.getroot()
-    
-    # Update the fleet name to match the new file name
-    root.find("Name").text = new_fleet_name
-    
-    # Write the updated fleet to the new file with the correct XML elements
-    tree.write(new_fleet_path, xml_declaration=True, encoding='utf-8', method="xml")
-    with open(new_fleet_path, 'r') as file:
-        content = file.read()
-    with open(new_fleet_path, 'w') as file:
-        file.write('<?xml version="1.0"?>\n<Fleet xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n' + content.split('\n', 2)[2])
-    
-    logging.info(f"Updated fleet saved: {new_fleet_path}")
-
-def get_new_fleet_name(base_name):
-    count = 1
-    while os.path.exists(os.path.join(IN_THEATER_DIR, f"{base_name} Battle {count}.fleet")):
-        count += 1
-    return f"{base_name} Battle {count}"
 
 def monitor_reports():
     observer = Observer()
