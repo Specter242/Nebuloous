@@ -15,7 +15,9 @@ def parse_report(xml_file):
             "total": int,
             "destroyed": int
          },
-         "defenses": dict        # each decoy type maps to a dict with "total_carried" and "total_expended"
+         "defenses": dict,       # each decoy type maps to a dict with "total_carried" and "total_expended"
+         "defensive_weapons": dict,  # each defensive weapon type maps to a dict with "rounds_carried" and "shots_fired"
+         "restores": dict        # each restore type maps to a dict with "total", "consumed" and "remaining"
       }
     """
     tree = ET.parse(xml_file)
@@ -40,6 +42,10 @@ def parse_report(xml_file):
             ships = player.find("Ships")
             if ships is None:
                 continue
+
+            # Initialize crafts dictionary for the fleet
+            crafts = {}
+
             # each ship for the player
             for ship in ships.findall("ShipBattleReport"):
                 # Get ship name
@@ -176,22 +182,111 @@ def parse_report(xml_file):
                                     "total_expended": total_expended
                                 }
 
-                # Parse craft information from the player's Craft element.
-                craft = {"total": 0, "destroyed": 0}
-                craft_elem = player.find("Craft")
-                if craft_elem is not None:
-                    craft_items = list(craft_elem)
-                    craft["total"] = len(craft_items)
-                    craft["destroyed"] = sum(1 for item in craft_items if item.get("destroyed", "").lower() == "true")
+                # Parse Defensive Weapon Reports from Defenses/WeaponReports
+                defensive_weapons = {}
+                defenses_elem = ship.find("Defenses")
+                if defenses_elem is not None:
+                    weapon_reports_elem = defenses_elem.find("WeaponReports")
+                    if weapon_reports_elem is not None:
+                        for dw_report in weapon_reports_elem.findall("DefensiveWeaponReport"):
+                            weapon_elem = dw_report.find("Weapon")
+                            if weapon_elem is not None:
+                                weapon_name_elem = weapon_elem.find("Name")
+                                weapon_name = weapon_name_elem.text.strip() if weapon_name_elem is not None else "Unknown"
+                                
+                                rounds_carried = 0
+                                shots_fired = 0
+                                
+                                rounds_carried_elem = weapon_elem.find("RoundsCarried")
+                                if (rounds_carried_elem is not None and rounds_carried_elem.text and 
+                                        rounds_carried_elem.text.strip().isdigit()):
+                                    try:
+                                        rounds_carried = int(rounds_carried_elem.text.strip())
+                                    except ValueError:
+                                        rounds_carried = 0
+                                
+                                shots_fired_elem = weapon_elem.find("ShotsFired")
+                                if (shots_fired_elem is not None and shots_fired_elem.text and 
+                                        shots_fired_elem.text.strip().isdigit()):
+                                    try:
+                                        shots_fired = int(shots_fired_elem.text.strip())
+                                    except ValueError:
+                                        shots_fired = 0
+                                
+                                if weapon_name in defensive_weapons:
+                                    defensive_weapons[weapon_name]["rounds_carried"] += rounds_carried
+                                    defensive_weapons[weapon_name]["shots_fired"] += shots_fired
+                                else:
+                                    defensive_weapons[weapon_name] = {
+                                        "rounds_carried": rounds_carried,
+                                        "shots_fired": shots_fired
+                                    }
+
+                # Parse restores from Engineering element
+                restores = {}
+                engineering_elem = ship.find("Engineering")
+                if engineering_elem is not None:
+                    restores_total_elem = engineering_elem.find("RestoresTotal")
+                    restores_consumed_elem = engineering_elem.find("RestoresConsumed")
+                    restores_remaining_elem = engineering_elem.find("RestoresRemaining")
+                    
+                    restores["total"] = int(restores_total_elem.text.strip()) if restores_total_elem is not None and restores_total_elem.text.strip().isdigit() else 0
+                    restores["consumed"] = int(restores_consumed_elem.text.strip()) if restores_consumed_elem is not None and restores_consumed_elem.text.strip().isdigit() else 0
+                    restores["remaining"] = int(restores_remaining_elem.text.strip()) if restores_remaining_elem is not None and restores_remaining_elem.text.strip().isdigit() else 0
 
                 ships_list.append({
                     "ship_name": ship_name,
                     "ammo_percentage_expended": ammo_pct,
                     "munitions": munitions,
                     "missiles": missiles,
-                    "craft": craft,
-                    "defenses": defenses  # New key with decoy (defensive) details
+                    "defenses": defenses,  # New key with decoy (defensive) details
+                    "defensive_weapons": defensive_weapons,  # New key with defensive weapon details
+                    "restores": restores  # New key with restores details
                 })
+
+            # Parse craft information from the player's Craft element using CraftBattleReport details
+            craft_elem = player.find("Craft")
+            if craft_elem is not None:
+                for craft_report in craft_elem.findall("CraftBattleReport"):
+                    design_name_elem = craft_report.find("DesignName")
+                    craft_type = (design_name_elem.text.strip() 
+                                  if design_name_elem is not None and design_name_elem.text 
+                                  else "Unknown")
+                    
+                    carried = 0
+                    lost = 0
+                    
+                    carried_elem = craft_report.find("Carried")
+                    if (carried_elem is not None and carried_elem.text 
+                            and carried_elem.text.strip().isdigit()):
+                        try:
+                            carried = int(carried_elem.text.strip())
+                        except ValueError:
+                            carried = 0
+                    
+                    lost_elem = craft_report.find("Lost")
+                    if (lost_elem is not None and lost_elem.text 
+                            and lost_elem.text.strip().isdigit()):
+                        try:
+                            lost = int(lost_elem.text.strip())
+                        except ValueError:
+                            lost = 0
+                    
+                    if craft_type in crafts:
+                        crafts[craft_type]["carried"] += carried
+                        crafts[craft_type]["lost"] += lost
+                    else:
+                        crafts[craft_type] = {
+                            "carried": carried,
+                            "lost": lost
+                        }
+
+            # Add crafts to the fleet
+            if crafts:
+                ships_list.append({
+                    "crafts": crafts
+                })
+
     return ships_list
 
 # Example usage:
@@ -199,10 +294,14 @@ if __name__ == "__main__":
     report_file = "testreport.xml"
     ships = parse_report(report_file)
     for ship in ships:
-        print("Ship:", ship["ship_name"])
-        print("  Ammo Percentage Expended:", ship["ammo_percentage_expended"])
-        print("  Munitions:", ship["munitions"])
-        print("  Missiles:", ship["missiles"])
-        print("  Craft:", ship["craft"])
-        print("  Defenses:", ship["defenses"])
+        if "ship_name" in ship:
+            print("Ship:", ship["ship_name"])
+            print("  Ammo Percentage Expended:", ship["ammo_percentage_expended"])
+            print("  Munitions:", ship["munitions"])
+            print("  Missiles:", ship["missiles"])
+            print("  Defenses:", ship["defenses"])
+            print("  Defensive Weapons:", ship["defensive_weapons"])
+            print("  Restores:", ship["restores"])
+        elif "crafts" in ship:
+            print("Crafts:", ship["crafts"])
         print()
