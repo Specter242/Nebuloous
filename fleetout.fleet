@@ -1,6 +1,6 @@
-<?xml version="1.0"?>
-<Fleet xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>blast</Name>
+<?xml version='1.0' encoding='utf-8'?>
+<Fleet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>blast battle 15</Name>
   <Version>3</Version>
   <TotalPoints>3000</TotalPoints>
   <FactionKey>Stock/Alliance</FactionKey>
@@ -23,17 +23,17 @@
               <MagSaveData>
                 <MagazineKey>gO7nw-uoskiT2Zk8Qw4YBQ</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-200 Tempest Block III</MunitionKey>
-                <Quantity>11</Quantity>
+                <Quantity>22</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>DhVqe0MswEmsDeI0ZduJAA</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-200 Tempest Block IV</MunitionKey>
-                <Quantity>11</Quantity>
+                <Quantity>22</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>deDUQguuHESSFhlh2fpydQ</MagazineKey>
                 <MunitionKey>Stock/EA99 Active Decoy</MunitionKey>
-                <Quantity>2</Quantity>
+                <Quantity>4</Quantity>
               </MagSaveData>
             </MissileLoad>
           </ComponentData>
@@ -46,17 +46,17 @@
               <MagSaveData>
                 <MagazineKey>eZJ-zDltEEyLWMWgDs-fNw</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-200 Tempest Block III</MunitionKey>
-                <Quantity>11</Quantity>
+                <Quantity>22</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>4LNwhIP2sEChNtKztrkt3g</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-200 Tempest Block IV</MunitionKey>
-                <Quantity>11</Quantity>
+                <Quantity>22</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>jesXV7BSEU-lZOAeF35HfA</MagazineKey>
                 <MunitionKey>Stock/EA99 Active Decoy</MunitionKey>
-                <Quantity>2</Quantity>
+                <Quantity>4</Quantity>
               </MagSaveData>
             </MissileLoad>
           </ComponentData>
@@ -69,7 +69,7 @@
               <MagSaveData>
                 <MagazineKey>0wrrPooKqEmQeySgkKeAUQ</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-H-300 Atlatl</MunitionKey>
-                <Quantity>6</Quantity>
+                <Quantity>12</Quantity>
               </MagSaveData>
             </MissileLoad>
           </ComponentData>
@@ -90,7 +90,7 @@
               <MagSaveData>
                 <MagazineKey>lGiL_ZHrUEKIH83EDqpZ3A</MagazineKey>
                 <MunitionKey>$MODMIS$/SGM-H-300 Atlatl</MunitionKey>
-                <Quantity>6</Quantity>
+                <Quantity>12</Quantity>
               </MagSaveData>
             </MissileLoad>
           </ComponentData>

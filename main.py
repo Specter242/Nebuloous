@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import logging
+import pprint  # new import for formatted printing
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -11,6 +12,7 @@ from fleetparser import parse_fleet
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+pprinter = pprint.PrettyPrinter(indent=2)  # Create a pretty printer
 
 def find_nebulous_folder():
     possible_paths = [
@@ -47,7 +49,8 @@ def process_skirmish_report(report_path):
     logging.info(f"Processing report: {report_path}")
     try:
         report_data = {"ships": parse_report(report_path)}
-        print("Report Information:", report_data)  # Debug print for report data
+        # Pretty-print report data in a readable format
+        pprinter.pprint({"Report Information": report_data})
         tree = ET.parse(report_path)
         root = tree.getroot()
         fleet_prefix_elem = root.find(".//Colors/FleetPrefix")
@@ -83,7 +86,8 @@ def process_skirmish_report(report_path):
             shutil.copy(campaign_fleet_path, target_fleet_path)
             logging.info(f"Copied fleet to In Theater: {target_fleet_path}")
             fleet_data = parse_fleet(target_fleet_path)
-            print("Fleet Information:", fleet_data)  # Debug print for fleet data
+            # Pretty-print fleet data in a readable format
+            pprinter.pprint({"Fleet Information": fleet_data})
             if fleet_data is None:
                 raise ValueError("parse_fleet returned None")
         except Exception as e:
@@ -95,24 +99,27 @@ def process_skirmish_report(report_path):
 
 def update_fleet_with_report(fleet_path, fleet_data, report_data):
     logging.info(f"Updating fleet with report: {fleet_path}")
-
     for ship_report in report_data.get("ships", []):
-        ship_name = ship_report["ship_name"]
+        report_ship_name = ship_report["ship_name"]
         for fleet_ship in fleet_data:
-            if fleet_ship["Name"] == ship_name:
-                # Update munitions
-                for munition, details in ship_report["munitions"].items():
+            if fleet_ship["Name"] == report_ship_name:
+                # Update munitions remains unchanged
+                for munition, details in ship_report.get("munitions", {}).items():
                     if munition in fleet_ship["munitions"]:
                         fleet_ship["munitions"][munition] -= details["shots_fired"]
                         if fleet_ship["munitions"][munition] < 0:
                             fleet_ship["munitions"][munition] = 0
-                # Update missiles
-                for missile, details in ship_report["missiles"].items():
-                    if missile in fleet_ship["missiles"]:
-                        fleet_ship["missiles"][missile] -= details["total_expended"]
-                        if fleet_ship["missiles"][missile] < 0:
-                            fleet_ship["missiles"][missile] = 0
-
+                # Update missiles using report values:
+                for missile, rep_details in ship_report.get("missiles", {}).items():
+                    # Use the reported totals if provided; otherwise, fall back to the campaign fleet value.
+                    report_total = rep_details.get("total_carried")
+                    report_expended = rep_details.get("total_expended", 0)
+                    if report_total is not None:
+                        new_remainder = report_total - report_expended
+                        fleet_ship["missiles"][missile] = new_remainder
+                    else:
+                        # Leave the fleet's original value if no report info is provided.
+                        pass
     save_updated_fleet(fleet_path, fleet_data)
 
 def save_updated_fleet(fleet_path, fleet_data):
@@ -145,17 +152,58 @@ def save_updated_fleet(fleet_path, fleet_data):
                                 munition_key = mag_save_data.find("MunitionKey").text
                                 if munition_key in fleet_ship["munitions"]:
                                     mag_save_data.find("Quantity").text = str(fleet_ship["munitions"][munition_key])
-                    # Update missiles
+                    # Update missiles with even distribution per magazine
                     if (component_data is not None and
                         component_data.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'ResizableCellLauncherData'):
                         missile_load = component_data.find("MissileLoad")
                         if missile_load is not None:
-                            for mag_save_data in missile_load.findall("MagSaveData"):
-                                missile_key = mag_save_data.find("MunitionKey").text
-                                if missile_key in fleet_ship["missiles"]:
-                                    mag_save_data.find("Quantity").text = str(fleet_ship["missiles"][missile_key])
+                            # For each missile type that was updated:
+                            for missile_key, remaining in fleet_ship["missiles"].items():
+                                # Gather all MagSaveData nodes with this missile_key
+                                matching_nodes = []
+                                for mag_save_data in missile_load.findall("MagSaveData"):
+                                    key = mag_save_data.find("MunitionKey").text.strip()
+                                    if key.lower().startswith("$modmis$/"):
+                                        key = key[len("$modmis$/"):].strip()
+                                    if key == missile_key:
+                                        matching_nodes.append(mag_save_data)
+                                if matching_nodes:
+                                    count = len(matching_nodes)
+                                    base_val = remaining // count
+                                    extra = remaining % count
+                                    for idx, node in enumerate(matching_nodes):
+                                        new_qty = base_val + (1 if idx < extra else 0)
+                                        node.find("Quantity").text = str(new_qty)
+
+                    # Distribute updated missile quantities across BulkMagazineData
+                    if (component_data is not None and
+                        component_data.attrib.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'BulkMagazineData'):
+                        load = component_data.find("Load")
+                        if load is not None:
+                            for missile_key, remaining in fleet_ship["missiles"].items():
+                                # Gather all MagSaveData nodes with this missile_key
+                                matching_nodes = []
+                                for mag_save_data in load.findall("MagSaveData"):
+                                    key = mag_save_data.find("MunitionKey").text.strip()
+                                    if key.lower().startswith("$modmis$/"):
+                                        key = key[len("$modmis$/"):].strip()
+                                    if key == missile_key:
+                                        matching_nodes.append(mag_save_data)
+                                # Distribute evenly
+                                if matching_nodes:
+                                    count = len(matching_nodes)
+                                    base_val = remaining // count
+                                    extra = remaining % count
+                                    for i, node in enumerate(matching_nodes):
+                                        new_qty = base_val + (1 if i < extra else 0)
+                                        node.find("Quantity").text = str(new_qty)
 
     tree.write(fleet_path, xml_declaration=True, encoding='utf-8', method="xml")
+    
+    # After writing, re-parse the fleet file and print the updated fleet information
+    from fleetparser import parse_fleet  # Ensure we have access to parse_fleet
+    updated_fleet = parse_fleet(fleet_path)
+    pprinter.pprint({"Updated Fleet Information": updated_fleet})
 
 def find_matching_fleet(ship_names):
     campaign_fleets_dir = os.path.join(FLEETS_DIR, "Campaign Fleets")
