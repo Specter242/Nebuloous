@@ -2,7 +2,7 @@
 <Fleet xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>testfleet</Name>
   <Version>3</Version>
-  <TotalPoints>3963</TotalPoints>
+  <TotalPoints>2566</TotalPoints>
   <FactionKey>Stock/Alliance</FactionKey>
   <SortOverrideOrder xsi:nil="true" />
   <Ships>
@@ -10,265 +10,19 @@
       <SaveID xsi:nil="true" />
       <Key>d087c8ff-aba0-4a94-80dc-a6efc7207c71</Key>
       <Name>Jasmine H. Kaenel</Name>
-      <Cost>1483</Cost>
+      <Cost>1587</Cost>
       <Number>1367</Number>
       <SymbolOption>0</SymbolOption>
       <HullType>Stock/Levy Escort Carrier</HullType>
       <SocketMap>
         <HullSocket>
-          <Key>NysR9qLdykCdsphUx1foSg</Key>
-          <ComponentName>Stock/Basic CIC</ComponentName>
+          <Key>g6Jp1xMKeEeNFOgfjnt3hQ</Key>
+          <ComponentName>Stock/Mk95 'Sarissa' PDT</ComponentName>
         </HullSocket>
         <HullSocket>
-          <Key>S0-J1cMwUEKF72p---79_w</Key>
-          <ComponentName>Stock/Deck Gear Locker</ComponentName>
+          <Key>VOg7-lRNWkGpjpj3W7QEoQ</Key>
+          <ComponentName>Stock/Mk29 'Stonewall' PDT</ComponentName>
         </HullSocket>
-        <HullSocket>
-          <Key>3XttIkpGh0yh8AMcSK0_9g</Key>
-          <ComponentName>Stock/Spacecraft Repair Station</ComponentName>
-        </HullSocket>
-        <HullSocket>
-          <Key>Z8askbBTfkm1Z1R8wX48Lw</Key>
-          <ComponentName>Stock/Large DC Locker</ComponentName>
-        </HullSocket>
-        <HullSocket>
-          <Key>ww85-B3EY02T4hEoPQBLPg</Key>
-          <ComponentName>Stock/Bulk Magazine</ComponentName>
-          <ComponentData xsi:type="BulkMagazineData">
-            <Load>
-              <MagSaveData>
-                <MagazineKey>rzZZ656UrUu8dCvzD-2AGQ</MagazineKey>
-                <MunitionKey>Stock/20mm Slug</MunitionKey>
-                <Quantity>20000</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>jQ2We1_aJ0SWNcJdeprBXg</MagazineKey>
-                <MunitionKey>$MODMIS$/SGM-200 Tempest Block III</MunitionKey>
-                <Quantity>13</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>rwNumZzsAEafGKGLw41zmg</MagazineKey>
-                <MunitionKey>Stock/S1 Glide Bomb</MunitionKey>
-                <Quantity>16</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>oBXXzhMoRU-zCahqdZSBdg</MagazineKey>
-                <MunitionKey>Stock/S2 Glide Bomb</MunitionKey>
-                <Quantity>23</Quantity>
-              </MagSaveData>
-            </Load>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>_yC35vSVhU6ziXsLtVwSAg</Key>
-          <ComponentName>Stock/Bulk Magazine</ComponentName>
-          <ComponentData xsi:type="BulkMagazineData">
-            <Load>
-              <MagSaveData>
-                <MagazineKey>6jiMLhCw4EONhIMMHPT7Hg</MagazineKey>
-                <MunitionKey>Stock/20mm Slug</MunitionKey>
-                <Quantity>20000</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>jHPl2HezpEe-pKPc43BJsA</MagazineKey>
-                <MunitionKey>$MODMIS$/SGM-200 Tempest Block III</MunitionKey>
-                <Quantity>13</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>xgYeiZ6wNUmgDCZ79gzU1Q</MagazineKey>
-                <MunitionKey>Stock/S1 Glide Bomb</MunitionKey>
-                <Quantity>16</Quantity>
-              </MagSaveData>
-              <MagSaveData>
-                <MagazineKey>EqBxBk5pO06nWU1dFcl1RA</MagazineKey>
-                <MunitionKey>Stock/S2 Glide Bomb</MunitionKey>
-                <Quantity>23</Quantity>
-              </MagSaveData>
-            </Load>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>J0fhl0E9OE2qbBM4dNSlIQ</Key>
-          <ComponentName>Stock/Bulk Internal Hangar</ComponentName>
-          <ComponentData xsi:type="CraftHangarData">
-            <StoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-            </StoredCraft>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>n9Ru447zt0O2PqoeCqEDKw</Key>
-          <ComponentName>Stock/Bulk Internal Hangar</ComponentName>
-          <ComponentData xsi:type="CraftHangarData">
-            <StoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/E-44 Sundial</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/E-44 Sundial</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-            </StoredCraft>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>TCnobRXZTUmbBhWLB2_bMA</Key>
-          <ComponentName>Stock/Bulk Internal Hangar</ComponentName>
-          <ComponentData xsi:type="CraftHangarData">
-            <StoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/B-86B Claymore</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440A escort</CraftTemplateKey>
-              </SavedStoredCraft>
-            </StoredCraft>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>Rqj_R1kXHkC9Il-jpVDWAA</Key>
-          <ComponentName>Stock/Bulk Internal Hangar</ComponentName>
-          <ComponentData xsi:type="CraftHangarData">
-            <StoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-              <SavedStoredCraft>
-                <CraftTemplateKey>$CRAFT$/PF-440x bouy</CraftTemplateKey>
-              </SavedStoredCraft>
-            </StoredCraft>
-          </ComponentData>
-        </HullSocket>
-        <HullSocket>
-          <Key>VRT4JesYZUmXgqX1BK03vw</Key>
-          <ComponentName>Stock/FR4800 Reactor</ComponentName>
-        </HullSocket>
-        <HullSocket>
-          <Key>tRoUxR8d7E2g8VMuBvtgPA</Key>
-          <ComponentName>Stock/FM500 Drive</ComponentName>
-        </HullSocket>
-        <HullSocket>
-          <Key>dsNyjGBVUkWbOJ_DhpBlWg</Key>
-          <ComponentName>Stock/Flight Deck Traversal System</ComponentName>
-        </HullSocket>
-        <HullSocket>
-          <Key>QPu81rov_k2q0TUPljf1wQ</Key>
-          <ComponentName>Stock/Flight Deck Traversal System</ComponentName>
-        </HullSocket>
-      </SocketMap>
-      <WeaponGroups />
-      <TemplateMissileTypes />
-      <TemplateSpacecraftTypes />
-    </Ship>
-    <Ship>
-      <SaveID xsi:nil="true" />
-      <Key>09872581-70d3-4455-8758-6d4ebf6dc9c8</Key>
-      <Name>The Stone Bus</Name>
-      <Cost>1481</Cost>
-      <Number>863</Number>
-      <SymbolOption>0</SymbolOption>
-      <HullType>Stock/Levy Escort Carrier</HullType>
-      <SocketMap>
         <HullSocket>
           <Key>NysR9qLdykCdsphUx1foSg</Key>
           <ComponentName>Stock/Basic CIC</ComponentName>
@@ -293,7 +47,7 @@
               <MagSaveData>
                 <MagazineKey>rzZZ656UrUu8dCvzD-2AGQ</MagazineKey>
                 <MunitionKey>Stock/20mm Slug</MunitionKey>
-                <Quantity>18000</Quantity>
+                <Quantity>15000</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>jQ2We1_aJ0SWNcJdeprBXg</MagazineKey>
@@ -310,6 +64,11 @@
                 <MunitionKey>Stock/S2 Glide Bomb</MunitionKey>
                 <Quantity>23</Quantity>
               </MagSaveData>
+              <MagSaveData>
+                <MagazineKey>j7czDI-tcUysWZWdDjpjjw</MagazineKey>
+                <MunitionKey>Stock/15mm Sandshot</MunitionKey>
+                <Quantity>50</Quantity>
+              </MagSaveData>
             </Load>
           </ComponentData>
         </HullSocket>
@@ -321,7 +80,7 @@
               <MagSaveData>
                 <MagazineKey>6jiMLhCw4EONhIMMHPT7Hg</MagazineKey>
                 <MunitionKey>Stock/20mm Slug</MunitionKey>
-                <Quantity>18000</Quantity>
+                <Quantity>15000</Quantity>
               </MagSaveData>
               <MagSaveData>
                 <MagazineKey>jHPl2HezpEe-pKPc43BJsA</MagazineKey>
@@ -337,6 +96,11 @@
                 <MagazineKey>EqBxBk5pO06nWU1dFcl1RA</MagazineKey>
                 <MunitionKey>Stock/S2 Glide Bomb</MunitionKey>
                 <Quantity>23</Quantity>
+              </MagSaveData>
+              <MagSaveData>
+                <MagazineKey>VSQifX_9N0-R5Fyi4ePIIw</MagazineKey>
+                <MunitionKey>Stock/Flak Round</MunitionKey>
+                <Quantity>150</Quantity>
               </MagSaveData>
             </Load>
           </ComponentData>
@@ -518,7 +282,7 @@
       <SaveID xsi:nil="true" />
       <Key>1fd10693-7de2-4dbb-83ee-8fa47dca85cd</Key>
       <Name>Mania Waxed</Name>
-      <Cost>999</Cost>
+      <Cost>979</Cost>
       <Number>871</Number>
       <SymbolOption>0</SymbolOption>
       <HullType>Stock/Vauxhall Light Cruiser</HullType>
@@ -529,11 +293,11 @@
         </HullSocket>
         <HullSocket>
           <Key>2QQdxC4UE0KOM42r82-ETQ</Key>
-          <ComponentName>Stock/Mk62 Cannon</ComponentName>
+          <ComponentName>Stock/Mk61 Cannon</ComponentName>
         </HullSocket>
         <HullSocket>
           <Key>IFKM9E04aUaHS0IoNDMShA</Key>
-          <ComponentName>Stock/Mk62 Cannon</ComponentName>
+          <ComponentName>Stock/Mk61 Cannon</ComponentName>
         </HullSocket>
         <HullSocket>
           <Key>rX6hes7UqkyHjEyKbFaWTQ</Key>
@@ -656,11 +420,11 @@
         <WepGroup Name="1">
           <MemberKeys>
             <string>T9Ebo41iA0eBXNYx8uyisw</string>
-            <string>2QQdxC4UE0KOM42r82-ETQ</string>
-            <string>IFKM9E04aUaHS0IoNDMShA</string>
             <string>rX6hes7UqkyHjEyKbFaWTQ</string>
             <string>BRMwuusKC02YrbFXRrrNzA</string>
             <string>vO1oPhlSuUih_cdAZk3Hqg</string>
+            <string>2QQdxC4UE0KOM42r82-ETQ</string>
+            <string>IFKM9E04aUaHS0IoNDMShA</string>
           </MemberKeys>
         </WepGroup>
       </WeaponGroups>

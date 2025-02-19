@@ -10,10 +10,11 @@ def parse_fleet(file_path):
 
     # Build a mapping from TemplateKey to Nickname for craft types.
     craft_template_map = {}
-    for craft_template in craft_types.findall('CraftTemplate'):
-        template_key = craft_template.find('TemplateKey').text.strip()
-        nickname = craft_template.find('Nickname').text.strip()
-        craft_template_map[template_key] = nickname
+    if craft_types is not None:
+        for craft_template in craft_types.findall('CraftTemplate'):
+            template_key = craft_template.find('TemplateKey').text.strip()
+            nickname = craft_template.find('Nickname').text.strip()
+            craft_template_map[template_key] = nickname
 
     for ship in ships.findall('Ship'):
         ship_name = ship.find('Name').text
